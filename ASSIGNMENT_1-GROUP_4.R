@@ -10,7 +10,8 @@ ui <- fluidPage(theme=shinytheme("superhero"),
                 
                 sidebarLayout(
                   
-                  sidebarPanel(), 
+                  sidebarPanel(
+    ), 
                   
                   mainPanel(
                     tabsetPanel(
