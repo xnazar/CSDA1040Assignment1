@@ -1,0 +1,24 @@
+---
+title: "CSDA 1040: Assignment 1 - Group 4"
+author: "Jose German, Anjana Pradeep Kumar, Anupama Radhakrishnan Kowsalya, Xenel Nazar"
+date: "03/06/2020"
+output: html_document
+---
+
+### Abstract
+
+## Introduction
+
+## CRISP-DM Framework
+
+### 1. Business understanding
+### 2. Data understanding
+### 3. Data preparation
+### 4. Modeling
+### 5. Evaluation
+### 6. Deployment
+
+```{r}
+
+```
+
