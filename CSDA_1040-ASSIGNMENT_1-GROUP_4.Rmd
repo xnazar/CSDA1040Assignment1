@@ -5,20 +5,67 @@ date: "03/06/2020"
 output: html_document
 ---
 
-### Abstract
+# 1.0 Abstract
 
-## Introduction
+# 2.0 Introduction
 
-## CRISP-DM Framework
+# 3.0 Background CRISP-DM Framework
 
-### 1. Business understanding
-### 2. Data understanding
-### 3. Data preparation
-### 4. Modeling
-### 5. Evaluation
-### 6. Deployment
+# 4.0 Objectives
+
+# 5.0 Data Understanding
+
+## 5.1 About the Data
+
+##5.2	Import Packages
 
 ```{r}
+knitr::opts_chunk$set(echo=TRUE)
+```
+
+```{r}
+getwd()
+```
+
+```{r}
+library(arules)
+library(arulesViz)
+library(knitr)
+library(recommenderlab)
+library(reshape2)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(lsa)
+```
+
+##5.3	Import Data
+```{r}
+#DS=read.csv(".csv")
+#dim(DS)
+
+#DS=read.csv(file.choose(), header = TRUE, na.strings = c("NA","","#NA"))
+#dim(DS)
 
 ```
+
+#6.0	Data Exploration and Preparation
+
+## 6.1
+
+## 6.2
+
+## 6.3
+
+## 6.4
+
+# 7.0 Modeling
+
+# 8.0 Conclusions and Recommendations
+
+# 9.0 Deployment
+
+# 10.0 Bibliography
+
+http://www2.informatik.uni-freiburg.de/~cziegler/BX/
 
