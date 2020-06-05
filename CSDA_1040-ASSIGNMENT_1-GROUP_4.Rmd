@@ -41,13 +41,28 @@ library(lsa)
 
 ##5.3	Import Data
 ```{r}
-#DS=read.csv(".csv")
-#dim(DS)
+#import books csv
+books=read.csv(file.choose(), header = TRUE, sep = ";", na.strings = c("NA","","#NA"))
 
-#DS=read.csv(file.choose(), header = TRUE, na.strings = c("NA","","#NA"))
-#dim(DS)
+dim(books)
 
 ```
+
+```{r}
+#import ratings csv
+ratings=read.csv(file.choose(), header = TRUE, sep = ";", na.strings = c("NA","","#NA"))
+
+dim(ratings)
+```
+
+```{r}
+#import users csv
+users=read.csv(file.choose(), header = TRUE, sep = ";", na.strings = c("NA","","#NA"))
+
+dim(users)
+```
+
+
 
 #6.0	Data Exploration and Preparation
 
