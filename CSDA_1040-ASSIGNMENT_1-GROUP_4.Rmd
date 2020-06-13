@@ -16,6 +16,10 @@ output: html_document
 
 ## 5.1 About the Data
 
+
+ISBN (https://www.isbn-international.org/content/what-isbn)
+
+
 ## 5.2	Import Packages
 
 ```{r}
@@ -57,18 +61,23 @@ ratings=read.csv("BX-Book-Ratings.csv", header = TRUE, sep=";", quote="", string
 
 # 6.0	Data Exploration and Preparation
 
-## 6.1
-
-## 6.2
-
-## 6.3
-
-## 6.4
+## 6.1 Initial Data cleanup
+```{r}
+# Data Types under books Dataframe
+str (books)
+```
 
 ```{r}
-# Remove Columns "Image_S", "Image_M", "Image_L" from books dataframe
-books<-books[-c(6,7,8)]
+# Data Types for users Dataframe
+str (users)
 ```
+
+```{r}
+# Data Types for ratings Dataframe
+str(ratings)
+```
+
+Results: We first need to remove quotes from the data.
 
 ```{r}
 # Function to remove quotes from dataframes
@@ -81,6 +90,8 @@ books[] <- clean(books)
 ratings[] <- clean(ratings)
 users[] <- clean(users)
 ```
+
+We also neeed to ensure certain columns as numeric. 
 
 ```{r}
 # Convert Certain Columns as Numeric
@@ -98,67 +109,152 @@ ratings$Rating<-as.numeric(ratings$Rating)
 
 ```
 
+Note: We are not converting the ISBN columns as numeric as they may contain the Roman Numeral "X" instead of the number 10 (https://www.isbn.org/faqs_general_questions#isbn_faq5)
+
+
+We are also removing image links from the books dataframe as it will not be pertinent for later analysis. This may be included later during deployment or future iterations of the recommender system
 ```{r}
-#Replace NULL values with NA
+# Remove Columns "Image_S", "Image_M", "Image_L" from books dataframe
+books<-books[-c(6,7,8)]
+```
+
+## 6.2 Recheck Data Types
+
+```{r}
+# Data Types under books Dataframe
+str (books)
+```
+
+```{r}
+# Data Types for users Dataframe
+str (users)
+```
+
+```{r}
+# Data Types for ratings Dataframe
+str(ratings)
+```
+
+## 6.3 Check for Missing Values
+
+```{r}
+# Check books Dataframe
+sum (is.na(books))
+```
+
+```{r}
+# Check users Dataframe
+sum(is.na(users))
+```
+```{r}
+# Check ratings Dataframe
+sum(is.na(ratings))
+```
+
+## 6.4 Check for Duplicates
+```{r}
+# Check Duplicates under books Dataframe
+anyDuplicated(books)
+```
+Results:
+
+```{r}
+# Check Duplicates under users Dataframe
+anyDuplicated(users)
+```
+Results:
+
+```{r}
+# Check Duplicates under ratings Dataframe
+anyDuplicated(ratings)
+```
+Results: There are no duplicates under ratings
+
+## 6.5 Summary of the Variables
+```{r}
+# Details of books Dataframe
+summary (books)
+```
+
+```{r}
+# Details of users Dataframe
+summary (users)
+```
+
+```{r}
+# Details of ratings Dataframe
+summary (ratings)
+```
+
+## 6.6 Simple Statistics
+```{r}
+
+```
+
+
+## 6.7 
+
+```{r}
+# Replace NULL values with NA
 users_df <-users %>% replace(.=="NULL", NA)
 books_df <-books %>% replace(.=="NULL", NA)
 ratings_df<-ratings %>% replace(.=="NULL", NA)
 ```
 
 ```{r}
-#Remove rows with NA
+# Remove rows with NA
 users_df<-users_df %>% drop_na(UserId)
 users_df<-users_df %>% drop_na(Location)
 books_df<-na.omit(books_df)
 ```
 
 ```{r}
-#Filter out rows containing webaddresses under ISBN (e.g. "http")
+# Filter out rows containing webaddresses under ISBN (e.g. "http")
 books_df<-books_df[!grepl("http", books_df$ISBN),]
 ```
 
 ```{r}
-#Replace ages less than 10 and greater than 100
+# Replace ages less than 10 and greater than 100
 users_df$Age[users_df$Age > 100] <- NA
 users_df$Age[users_df$Age < 10] <- NA
 ```
 
 ```{r}
-#Replace missing age with mean
+# Replace missing age with mean
 ageMean = trunc(mean(users_df$Age, na.rm = TRUE))
 users_df$Age[is.na(users_df$Age)] <- ageMean
 ```
 
 ```{r}
-#Replace year =0 and NA  with mean
+# Replace year =0 and NA  with mean
 yearMean = trunc(mean(books_df$Year_of_Publication, na.rm = TRUE))
 books_df$Year_of_Publication[books_df$Year_of_Publication ==0] <- NA
 books_df$Year_of_Publication[is.na(books_df$Year_of_Publication)] <- yearMean
 ```
 
 ```{r}
-#Merge rating and book
+# Merge ratings and books dataframes to "ratings_books" dataframe
 ratings_books<-left_join(ratings_df,books_df,by="ISBN")
 ```
 
 ```{r}
-#Merge ratings_books and users
+# Merge ratings_books and users dataframes to "ratings_books_users" dataframe"
 ratings_books_users<-left_join(ratings_books,users_df,by="UserId")
 ```
 
 ```{r}
-#Remove NAs
+# Remove NAs from dataframe
 ratings_books_users<-na.omit(ratings_books_users)
 ```
 
 ```{r}
-#Subset dataframe to Explicit and Implicit Ratings
+# Subset dataframe to Explicit and Implicit Ratings
 ratings_explicit<-subset(ratings_books_users,ratings_books_users$Rating>0)
 ratings_implicit<-subset(ratings_books_users,ratings_books_users$Rating==0)
 ```
 
 ```{r}
-#Most Read books
+# Most Read books
 most_read_books<-ratings_books_users%>%
   group_by(ISBN,Book_Title,Book_Author,Publisher)%>%
   summarize(num_ISBN=n())%>%
@@ -171,7 +267,7 @@ head(most_read_books,10)
 ```
 
 ```{r}
-#Top Rated books
+# Top Rated books
 top_rated_books<-ratings_explicit%>%
   group_by(ISBN,Book_Title,Book_Author,Publisher)%>%
   filter(Rating>7)%>%
@@ -185,14 +281,62 @@ top_rated_books<-ratings_explicit%>%
 head(top_rated_books,10)
 ```
 
+
 ```{r}
-#Check Age Distribution
+# Matrix with users rated 50 or more
+
+rating_matrix_long<-ratings_explicit%>%
+  add_count(UserId)%>%
+  dplyr::filter(n>50)%>%
+  select(ISBN,UserId,Rating)%>%
+  arrange(UserId)
+```
+
+
+```{r}
+# Matrix with books rated 50 or more
+
+rating_matrix_long<-rating_matrix_long%>%
+  add_count(ISBN)%>%
+  dplyr::filter(n>50)%>%
+  select(ISBN,UserId,Rating)%>%
+  arrange(ISBN)
+```
+
+```{r}
+#User-Book Rating matrix
+
+rating_matrix<-rating_matrix_long%>%pivot_wider(names_from = ISBN,values_from=Rating,values_fill=0)
+```
+
+```{r}
+# Check Age Distribution
+
 table(users_df$Age)
 barplot(table(users_df$Age),main="Age Distribution")
+
+```
+
+```{r}
+# Replot and check
+table(users_df$Age)
+barplot(table(users_df$Age),main="Age Distribution")
+
 ```
 
 ```{r}
 
+books_df_year<-books_df%>%
+  group_by(Year_of_Publication)%>%
+  summarise(counts = n())
+
+ggplot(books_df_year, aes(x=Year_of_Publication, y=counts)) +geom_point()
+```
+```{r}
+#split the Location column in ratings_book_user into City, Prov, Country
+#creates new dataframe: ratings_book_user_loc
+
+ratings_books_users_loc <- separate(data = ratings_books_users, col = Location, into = c("City", "Prov", "Country"), sep = "\\,")
 ```
 
 
@@ -205,3 +349,9 @@ barplot(table(users_df$Age),main="Age Distribution")
 # 10.0 Bibliography
 
 http://www2.informatik.uni-freiburg.de/~cziegler/BX/
+
+https://www.isbn-international.org/content/what-isbn
+
+https://www.isbn.org/faqs_general_questions#isbn_faq5
+
+
