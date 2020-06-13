@@ -1,10 +1,9 @@
 ---
-title: "CSDA 1040: Assignment 1 - Group 4"
+title: 'CSDA 1040: Assignment 1 - Group 4_2020.06.10'
 author: "Jose German, Anjana Pradeep Kumar, Anupama Radhakrishnan Kowsalya, Xenel Nazar"
-date: "03/06/2020"
+date: "6/10/2020"
 output: html_document
 ---
-
 # 1.0 Abstract
 
 # 2.0 Introduction
@@ -17,54 +16,46 @@ output: html_document
 
 ## 5.1 About the Data
 
-##5.2	Import Packages
+## 5.2	Import Packages
 
 ```{r}
 knitr::opts_chunk$set(echo=TRUE)
 ```
 
 ```{r}
+#Path setup
+#path<- "C:/RProjects/bookcrossing"
+#setwd(path)
 getwd()
 ```
 
 ```{r}
-library(arules)
-library(arulesViz)
-library(knitr)
-library(recommenderlab)
-library(reshape2)
+library(data.table)
+library(plotly)
 library(ggplot2)
-library(dplyr)
+library(RColorBrewer)
+library(stringr)
+library(plyr)
 library(tidyr)
-library(lsa)
+library(dplyr)
 ```
 
-##5.3	Import Data
+
+## 5.3	Import Data
 ```{r}
-#import books csv
-books=read.csv(file.choose(), header = TRUE, sep = ";", na.strings = c("NA","","#NA"))
+# Import CSV Files
 
-dim(books)
+# Import Books CSV
+books <- read.csv("BX-Books.csv", header = TRUE, sep = ";", quote="", stringsAsFactors = FALSE, col.names = c("ISBN", "Book_Title", "Book_Author", "Year_of_Publication", "Publisher", "Image_S", "Image_M", "Image_L"))
 
+# Import Users CSV
+users=read.csv("BX-Users.csv", header = TRUE, sep = ";", quote="", stringsAsFactors = FALSE, col.names = c("UserId","Location","Age"))
+
+# Import Ratings CSV
+ratings=read.csv("BX-Book-Ratings.csv", header = TRUE, sep=";", quote="", stringsAsFactors = FALSE, col.names = c("UserId","ISBN","Rating"))
 ```
 
-```{r}
-#import ratings csv
-ratings=read.csv(file.choose(), header = TRUE, sep = ";", na.strings = c("NA","","#NA"))
-
-dim(ratings)
-```
-
-```{r}
-#import users csv
-users=read.csv(file.choose(), header = TRUE, sep = ";", na.strings = c("NA","","#NA"))
-
-dim(users)
-```
-
-
-
-#6.0	Data Exploration and Preparation
+# 6.0	Data Exploration and Preparation
 
 ## 6.1
 
@@ -73,6 +64,137 @@ dim(users)
 ## 6.3
 
 ## 6.4
+
+```{r}
+# Remove Columns "Image_S", "Image_M", "Image_L" from books dataframe
+books<-books[-c(6,7,8)]
+```
+
+```{r}
+# Function to remove quotes from dataframes
+clean <- colwise(function(ttt) str_replace_all(ttt, '\"', ""))
+```
+
+```{r}
+# Apply clean function
+books[] <- clean(books)
+ratings[] <- clean(ratings)
+users[] <- clean(users)
+```
+
+```{r}
+# Convert Certain Columns as Numeric
+
+# Convert UserID and Age in Users Dataframe
+users$UserId<-as.numeric(users$UserId)
+users$Age<-as.numeric(users$Age)
+
+# Convert Year of Publication in Books Dataframe
+books$Year_of_Publication<-as.numeric(books$Year_of_Publication)
+
+# Convert UserId and Rating in Ratings Dataframe
+ratings$UserId<-as.numeric(ratings$UserId)
+ratings$Rating<-as.numeric(ratings$Rating)
+
+```
+
+```{r}
+#Replace NULL values with NA
+users_df <-users %>% replace(.=="NULL", NA)
+books_df <-books %>% replace(.=="NULL", NA)
+ratings_df<-ratings %>% replace(.=="NULL", NA)
+```
+
+```{r}
+#Remove rows with NA
+users_df<-users_df %>% drop_na(UserId)
+users_df<-users_df %>% drop_na(Location)
+books_df<-na.omit(books_df)
+```
+
+```{r}
+#Filter out rows containing webaddresses under ISBN (e.g. "http")
+books_df<-books_df[!grepl("http", books_df$ISBN),]
+```
+
+```{r}
+#Replace ages less than 10 and greater than 100
+users_df$Age[users_df$Age > 100] <- NA
+users_df$Age[users_df$Age < 10] <- NA
+```
+
+```{r}
+#Replace missing age with mean
+ageMean = trunc(mean(users_df$Age, na.rm = TRUE))
+users_df$Age[is.na(users_df$Age)] <- ageMean
+```
+
+```{r}
+#Replace year =0 and NA  with mean
+yearMean = trunc(mean(books_df$Year_of_Publication, na.rm = TRUE))
+books_df$Year_of_Publication[books_df$Year_of_Publication ==0] <- NA
+books_df$Year_of_Publication[is.na(books_df$Year_of_Publication)] <- yearMean
+```
+
+```{r}
+#Merge rating and book
+ratings_books<-left_join(ratings_df,books_df,by="ISBN")
+```
+
+```{r}
+#Merge ratings_books and users
+ratings_books_users<-left_join(ratings_books,users_df,by="UserId")
+```
+
+```{r}
+#Remove NAs
+ratings_books_users<-na.omit(ratings_books_users)
+```
+
+```{r}
+#Subset dataframe to Explicit and Implicit Ratings
+ratings_explicit<-subset(ratings_books_users,ratings_books_users$Rating>0)
+ratings_implicit<-subset(ratings_books_users,ratings_books_users$Rating==0)
+```
+
+```{r}
+#Most Read books
+most_read_books<-ratings_books_users%>%
+  group_by(ISBN,Book_Title,Book_Author,Publisher)%>%
+  summarize(num_ISBN=n())%>%
+  filter(num_ISBN>200)%>%
+  arrange(-num_ISBN)%>%
+  select(ISBN,Book_Title,Book_Author,Publisher)%>%
+  print()
+
+head(most_read_books,10)
+```
+
+```{r}
+#Top Rated books
+top_rated_books<-ratings_explicit%>%
+  group_by(ISBN,Book_Title,Book_Author,Publisher)%>%
+  filter(Rating>7)%>%
+  summarize(num_ISBN=n())%>%
+  filter(num_ISBN>50)%>%
+  arrange(-num_ISBN)%>%
+  select(ISBN,Book_Title,Book_Author,Publisher)%>%
+  print()
+
+
+head(top_rated_books,10)
+```
+
+```{r}
+#Check Age Distribution
+table(users_df$Age)
+barplot(table(users_df$Age),main="Age Distribution")
+```
+
+```{r}
+
+```
+
 
 # 7.0 Modeling
 
@@ -83,4 +205,3 @@ dim(users)
 # 10.0 Bibliography
 
 http://www2.informatik.uni-freiburg.de/~cziegler/BX/
-
