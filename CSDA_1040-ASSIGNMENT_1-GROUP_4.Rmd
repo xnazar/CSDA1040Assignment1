@@ -191,6 +191,10 @@ table(users_df$Age)
 barplot(table(users_df$Age),main="Age Distribution")
 ```
 
+```{r}
+
+```
+
 
 # 7.0 Modeling
 
