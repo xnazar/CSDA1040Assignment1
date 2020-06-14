@@ -1,7 +1,7 @@
 ---
-title: 'CSDA 1040: Assignment 1 - Group 4_2020.06.10'
+title: 'CSDA 1040: Assignment 1 - Group 4'
 author: "Jose German, Anjana Pradeep Kumar, Anupama Radhakrishnan Kowsalya, Xenel Nazar"
-date: "6/10/2020"
+date: "6/14/2020"
 output: html_document
 ---
 # 1.0 Abstract
@@ -16,9 +16,33 @@ output: html_document
 
 ## 5.1 About the Data
 
+The data is a crawl by Cai-Nicolas Ziegler  of the Department of Computer Science from the University of Freiburg on the BookCrossing community for a four week period in August to September 2004 (http://www2.informatik.uni-freiburg.de/~cziegler/BX/). 
 
-ISBN (https://www.isbn-international.org/content/what-isbn)
+The BookCrossing community releases "books into the wild for a stranger to find, or via controlled release to another BookCrossing member" (https://www.bookcrossing.com/?). The data is a compilation of anonymized users with their locations, their explicit & implicit ratings, and information about the books they have read. 
 
+The data is compiled into three distinct csv files on User data ("BX-Users.csv"), Books ("BX-Books.csv"), and Ratings ("BX-Book-Ratings.csv")
+
+Each csv file contains various attributes such as:
+
+Users:
+- User-Id: Represents each anonymized user
+- Location: The user's location
+- Age: The user's age
+
+Books:
+- ISBN: International Standard Book Number or unique identifier for each book. (https://www.isbn-international.org/content/what-isbn)
+- Book-Title: Title of the book
+- Book-Author: The book's author
+- Year-of-Publication: Year when the book was published
+- Publisher: The book's publisher
+- Image-URL-S: Small cover image, linked to the Amazon website
+- Image-URL-M: Medium cover image, linked to the Amazon website
+- Image-URL-L: Large cover image, linked to the Amazon website
+
+Ratings:
+- User-Id: Represents each anonymized user
+- ISBN: International Standard Book Number or unique identifier for each book. (https://www.isbn-international.org/content/what-isbn)
+- Book-Rating: Either explicit, expressed on a scale from 1-10 (higher values denoting higher appreciation), or implicit, expressed by 0.
 
 ## 5.2	Import Packages
 
@@ -42,6 +66,9 @@ library(stringr)
 library(plyr)
 library(tidyr)
 library(dplyr)
+library(rcompanion)
+library(e1071)
+library(outliers)
 ```
 
 
@@ -188,12 +215,10 @@ summary (ratings)
 
 ## 6.6 Simple Statistics
 ```{r}
-
+##
 ```
 
-
-## 6.7 
-
+## 6.7 Replace NULL Values with NA
 ```{r}
 # Replace NULL values with NA
 users_df <-users %>% replace(.=="NULL", NA)
@@ -201,6 +226,7 @@ books_df <-books %>% replace(.=="NULL", NA)
 ratings_df<-ratings %>% replace(.=="NULL", NA)
 ```
 
+## 6.8 Remove rows with NA
 ```{r}
 # Remove rows with NA
 users_df<-users_df %>% drop_na(UserId)
@@ -208,11 +234,13 @@ users_df<-users_df %>% drop_na(Location)
 books_df<-na.omit(books_df)
 ```
 
+## 6.9 Filter out rows with webaddresses under ISBN
 ```{r}
 # Filter out rows containing webaddresses under ISBN (e.g. "http")
 books_df<-books_df[!grepl("http", books_df$ISBN),]
 ```
 
+## 6.10 Further cleanup
 ```{r}
 # Replace ages less than 10 and greater than 100
 users_df$Age[users_df$Age > 100] <- NA
@@ -232,6 +260,7 @@ books_df$Year_of_Publication[books_df$Year_of_Publication ==0] <- NA
 books_df$Year_of_Publication[is.na(books_df$Year_of_Publication)] <- yearMean
 ```
 
+## 6.11 Merge dataframes
 ```{r}
 # Merge ratings and books dataframes to "ratings_books" dataframe
 ratings_books<-left_join(ratings_df,books_df,by="ISBN")
@@ -242,11 +271,13 @@ ratings_books<-left_join(ratings_df,books_df,by="ISBN")
 ratings_books_users<-left_join(ratings_books,users_df,by="UserId")
 ```
 
+## 6.12 remove NAs from dataframe
 ```{r}
 # Remove NAs from dataframe
 ratings_books_users<-na.omit(ratings_books_users)
 ```
 
+## 6.13 Subset dataframe to Explicit and Implicit ratings
 ```{r}
 # Subset dataframe to Explicit and Implicit Ratings
 ratings_explicit<-subset(ratings_books_users,ratings_books_users$Rating>0)
@@ -325,7 +356,32 @@ barplot(table(users_df$Age),main="Age Distribution")
 ```
 
 ```{r}
+# Rating Distribution, Summary, Statistics and Normalization
 
+summary(ratings_explicit)
+range(ratings_explicit$Rating)
+
+rating_dist = ratings_explicit$Rating
+plotNormalHistogram(rating_dist)
+
+print(skewness(ratings_explicit$Rating))# Left skewed by -0.6613279
+```
+```{r}
+# Identify Outliers
+outlier(ratings_explicit$Rating)
+ratings_norm<-subset(ratings_explicit,ratings_explicit$Rating>3)
+
+print(skewness(ratings_norm$Rating)) # skewness after  -0.3522745
+```
+
+```{r}
+# Normalising using log transformation
+rating_log_norm = ratings_norm$Rating
+ratings_norm$Rating<-log(ratings_norm$Rating)
+plotNormalHistogram(rating_log_norm)
+```
+
+```{r}
 books_df_year<-books_df%>%
   group_by(Year_of_Publication)%>%
   summarise(counts = n())
@@ -333,16 +389,21 @@ books_df_year<-books_df%>%
 ggplot(books_df_year, aes(x=Year_of_Publication, y=counts)) +geom_point()
 ```
 ```{r}
-#split the Location column in ratings_book_user into City, Prov, Country
-#creates new dataframe: ratings_book_user_loc
+# Split the Location column in ratings_book_user into City, Prov, Country
+# Creates new dataframe: ratings_book_user_loc
 
 ratings_books_users_loc <- separate(data = ratings_books_users, col = Location, into = c("City", "Prov", "Country"), sep = "\\,")
 ```
 
-
 # 7.0 Modeling
 
 # 8.0 Conclusions and Recommendations
+
+## 8.1 Conclusions
+
+## 8.2 Recomendations
+
+Additional info could additionally benefit the recomender system, to help narrow down books the users may like data on the books' genre, language, number of pages, etc.
 
 # 9.0 Deployment
 
