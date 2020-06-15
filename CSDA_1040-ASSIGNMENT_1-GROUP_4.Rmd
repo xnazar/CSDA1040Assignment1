@@ -8,9 +8,10 @@ output: html_document
 
 # 2.0 Introduction
 
-# 3.0 Background CRISP-DM Framework
+# 3.0 Background
 
 # 4.0 Objectives
+The objective is to find an effective recommender system to recomend the next book they should read, based on their inputs. 
 
 # 5.0 Data Understanding
 
@@ -45,7 +46,6 @@ Ratings:
 - Book-Rating: Either explicit, expressed on a scale from 1-10 (higher values denoting higher appreciation), or implicit, expressed by 0.
 
 ## 5.2	Import Packages
-
 ```{r}
 knitr::opts_chunk$set(echo=TRUE)
 ```
@@ -345,7 +345,6 @@ rating_matrix<-rating_matrix_long%>%pivot_wider(names_from = ISBN,values_from=Ra
 
 table(users_df$Age)
 barplot(table(users_df$Age),main="Age Distribution")
-
 ```
 
 ```{r}
@@ -393,6 +392,13 @@ ggplot(books_df_year, aes(x=Year_of_Publication, y=counts)) +geom_point()
 # Creates new dataframe: ratings_book_user_loc
 
 ratings_books_users_loc <- separate(data = ratings_books_users, col = Location, into = c("City", "Prov", "Country"), sep = "\\,")
+```
+
+```{r}
+# Split the Location column in ratings_book_user into City, Prov, Country
+# Creates new dataframe: ratings_book_user_loc
+
+ratings_explicit_loc <- separate(data = ratings_explicit, col = Location, into = c("City", "Prov", "Country"), sep = "\\,")
 ```
 
 # 7.0 Modeling
