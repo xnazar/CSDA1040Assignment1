@@ -294,7 +294,7 @@ poplist<-most_read_books%>%
 
 ```{r}
 # Plot Popular books
-bp<- ggplot(most_read_books, aes(x="Popular Books", y=num_ISBN, fill=title))+
+bp<- ggplot(most_read_books, aes(x="most_read_books", y="ISBN", fill=Book_Title))+
   geom_bar(width = 1, stat = "identity")
 
 bp + scale_fill_brewer(palette="Dark2")+theme_minimal()
@@ -317,7 +317,7 @@ topratelist<-top_rated_books%>%
   select(ISBN,Book_Title,Book_Author,Publisher)
 ```
 ```{r}
-pie<- ggplot(top_rated_books, aes(x="Top rated books", y=num_ISBN, fill=title))+
+pie<- ggplot(top_rated_books, aes(x="topratelist", y="num_ISBN", fill=Book_Title))+
   geom_bar(width = 1, stat = "identity")
 
 pie + coord_polar("y", start=0)
