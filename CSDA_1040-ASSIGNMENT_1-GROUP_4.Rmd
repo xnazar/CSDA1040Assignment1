@@ -7,11 +7,17 @@ output: html_document
 # 1.0 Abstract
 
 # 2.0 Introduction
+Books remain an important medium in today's society. In 2018, over 675 million print books were sold in the U.S. and book stores bring in almost 10 million dollars per year (https://www.statista.com/topics/1177/book-market/). While, in Canada, 54 million books accounting to 1.1 billion dollars in retail value, were sold in 2018 (http://www.ontariocreates.ca/collaboration/research_and_industry_information/industry_profiles/Book_Industry_Profile.htm#footnote-2). 
+
+Consumption of books remains relevant, as 74% of U.S. consumers have noted that they have consumed at least one book in the past year, and 98% of readers say pleasure is their main reason for reading books (https://www.statista.com/topics/1177/book-market/).
+
+
+
 
 # 3.0 Background
 
 # 4.0 Objectives
-The objective is to find an effective recommender system to recomend the next book they should read, based on their inputs. 
+The objective is to find an effective recommender system to recommend the next book they should read, based on their inputs. 
 
 # 5.0 Data Understanding
 
@@ -69,6 +75,7 @@ library(dplyr)
 library(rcompanion)
 library(e1071)
 library(outliers)
+library(recommenderlab)
 ```
 
 
@@ -89,23 +96,8 @@ ratings=read.csv("BX-Book-Ratings.csv", header = TRUE, sep=";", quote="", string
 # 6.0	Data Exploration and Preparation
 
 ## 6.1 Initial Data cleanup
-```{r}
-# Data Types under books Dataframe
-str (books)
-```
 
-```{r}
-# Data Types for users Dataframe
-str (users)
-```
-
-```{r}
-# Data Types for ratings Dataframe
-str(ratings)
-```
-
-Results: We first need to remove quotes from the data.
-
+We first need to remove quotes from the data.
 ```{r}
 # Function to remove quotes from dataframes
 clean <- colwise(function(ttt) str_replace_all(ttt, '\"', ""))
@@ -119,7 +111,6 @@ users[] <- clean(users)
 ```
 
 We also neeed to ensure certain columns as numeric. 
-
 ```{r}
 # Convert Certain Columns as Numeric
 
@@ -133,19 +124,18 @@ books$Year_of_Publication<-as.numeric(books$Year_of_Publication)
 # Convert UserId and Rating in Ratings Dataframe
 ratings$UserId<-as.numeric(ratings$UserId)
 ratings$Rating<-as.numeric(ratings$Rating)
-
 ```
 
-Note: We are not converting the ISBN columns as numeric as they may contain the Roman Numeral "X" instead of the number 10 (https://www.isbn.org/faqs_general_questions#isbn_faq5)
+Note: We are not converting the ISBN columns as numeric as they may contain the Roman Numeral "X" instead of the number 10 (https://www.isbn.org/faqs_general_questions#isbn_faq5).
 
 
-We are also removing image links from the books dataframe as it will not be pertinent for later analysis. This may be included later during deployment or future iterations of the recommender system
+We are also removing image links from the books dataframe as it will not be pertinent for later analysis. This may be included later during deployment or future iterations of the recommender system.
 ```{r}
 # Remove Columns "Image_S", "Image_M", "Image_L" from books dataframe
 books<-books[-c(6,7,8)]
 ```
 
-## 6.2 Recheck Data Types
+## 6.2 Verify Data Types
 
 ```{r}
 # Data Types under books Dataframe
@@ -173,6 +163,7 @@ sum (is.na(books))
 # Check users Dataframe
 sum(is.na(users))
 ```
+
 ```{r}
 # Check ratings Dataframe
 sum(is.na(ratings))
@@ -235,8 +226,10 @@ books_df<-na.omit(books_df)
 ```
 
 ## 6.9 Filter out rows with webaddresses under ISBN
+
+There was likely an error during the initial compilation of the web crawl, resulting in some links showing under ISBN instances. These web addresses need to be removed from our data to help our analysis. 
 ```{r}
-# Filter out rows containing webaddresses under ISBN (e.g. "http")
+# Filter out rows containing web addresses under ISBN (e.g. "http")
 books_df<-books_df[!grepl("http", books_df$ISBN),]
 ```
 
@@ -285,17 +278,28 @@ ratings_implicit<-subset(ratings_books_users,ratings_books_users$Rating==0)
 ```
 
 ```{r}
-# Most Read books
+# Popular books
 most_read_books<-ratings_books_users%>%
   group_by(ISBN,Book_Title,Book_Author,Publisher)%>%
   summarize(num_ISBN=n())%>%
   filter(num_ISBN>200)%>%
   arrange(-num_ISBN)%>%
   select(ISBN,Book_Title,Book_Author,Publisher)%>%
-  print()
+  head(10)
 
-head(most_read_books,10)
+# Save to list
+poplist<-most_read_books%>%
+  select(ISBN,Book_Title,Book_Author,Publisher)
 ```
+
+```{r}
+# Plot Popular books
+bp<- ggplot(most_read_books, aes(x="Popular Books", y=num_ISBN, fill=title))+
+  geom_bar(width = 1, stat = "identity")
+
+bp + scale_fill_brewer(palette="Dark2")+theme_minimal()
+```
+
 
 ```{r}
 # Top Rated books
@@ -306,16 +310,22 @@ top_rated_books<-ratings_explicit%>%
   filter(num_ISBN>50)%>%
   arrange(-num_ISBN)%>%
   select(ISBN,Book_Title,Book_Author,Publisher)%>%
-  print()
+  head(10)
 
+# Save to list
+topratelist<-top_rated_books%>%
+  select(ISBN,Book_Title,Book_Author,Publisher)
+```
+```{r}
+pie<- ggplot(top_rated_books, aes(x="Top rated books", y=num_ISBN, fill=title))+
+  geom_bar(width = 1, stat = "identity")
 
-head(top_rated_books,10)
+pie + coord_polar("y", start=0)
 ```
 
 
 ```{r}
-# Matrix with users rated 50 or more
-
+# Subset data to users who have rated 50 or more books
 rating_matrix_long<-ratings_explicit%>%
   add_count(UserId)%>%
   dplyr::filter(n>50)%>%
@@ -325,8 +335,7 @@ rating_matrix_long<-ratings_explicit%>%
 
 
 ```{r}
-# Matrix with books rated 50 or more
-
+# Narrow down to only books that were rated 50 or more 
 rating_matrix_long<-rating_matrix_long%>%
   add_count(ISBN)%>%
   dplyr::filter(n>50)%>%
@@ -335,8 +344,16 @@ rating_matrix_long<-rating_matrix_long%>%
 ```
 
 ```{r}
-#User-Book Rating matrix
+# Save to list
+booklist<-rating_matrix_long%>%
+  left_join(books_df,by="ISBN")%>%
+  select(Book_Title)%>%
+  unique()
+```
 
+
+```{r}
+# User-Book Rating matrix
 rating_matrix<-rating_matrix_long%>%pivot_wider(names_from = ISBN,values_from=Rating,values_fill=0)
 ```
 
@@ -365,6 +382,7 @@ plotNormalHistogram(rating_dist)
 
 print(skewness(ratings_explicit$Rating))# Left skewed by -0.6613279
 ```
+
 ```{r}
 # Identify Outliers
 outlier(ratings_explicit$Rating)
@@ -381,12 +399,83 @@ plotNormalHistogram(rating_log_norm)
 ```
 
 ```{r}
+# matrix with users rated more than 50 
+
+rating_matrix_long<-ratings_norm%>%
+  add_count(UserId)%>%
+  dplyr::filter(n>50)%>%
+  select(ISBN,UserId,Rating)%>%
+  arrange(UserId)
+```
+
+```{r}
+# matrix with books rated more than 50 
+
+rating_matrix_long<-rating_matrix_long%>%
+  add_count(ISBN)%>%
+  dplyr::filter(n>50)%>%
+  select(ISBN,UserId,Rating)%>%
+  arrange(ISBN)
+```
+
+```{r}
+booklist<-rating_matrix_long%>%
+  left_join(books_df,by="ISBN")%>%
+  select(Book_Title)%>%
+  unique()
+```
+
+```{r}
+# User-Book Rating matrix
+rating_matrix<-rating_matrix_long%>%pivot_wider(names_from = ISBN,values_from=Rating)
+```
+
+```{r}
+# Removing userid from rating matrix
+rating_matrix = as.matrix(rating_matrix[,-1])
+```
+
+```{r}
+# Real matrix
+object.size(rating_matrix)
+rating_matrix = as(rating_matrix, "realRatingMatrix")
+object.size(rating_matrix)
+```
+
+```{r}
+#Normalize the ratings matrix
+#rating_matrix = normalize(rating_matrix)
+```
+
+```{r}
+ratingmodel = Recommender(rating_matrix, method = "UBCF", param=list(method="Cosine",nn=10)) 
+```
+
+```{r}
+# Predictions
+Top_5_pred = predict(ratingmodel, rating_matrix[1], n=5)
+Top_5_List = as(Top_5_pred, "list")
+```
+
+```{r}
+# Recommended predictions for a user based on previous ratings
+recomdf=data.frame(Top_5_List)
+colnames(recomdf)="ISBN"
+bookrecomdf<-left_join(recomdf,books_df,by="ISBN")%>%
+  select(Book_Title)%>%
+  print()
+```
+
+
+```{r}
 books_df_year<-books_df%>%
   group_by(Year_of_Publication)%>%
   summarise(counts = n())
 
 ggplot(books_df_year, aes(x=Year_of_Publication, y=counts)) +geom_point()
 ```
+
+
 ```{r}
 # Split the Location column in ratings_book_user into City, Prov, Country
 # Creates new dataframe: ratings_book_user_loc
@@ -413,6 +502,8 @@ Additional info could additionally benefit the recomender system, to help narrow
 
 # 9.0 Deployment
 
+The underlying code of this markdown report and the shiny app, can be found on [Github](https://github.com/xnazar/CSDA1040Assignment1)
+
 # 10.0 Bibliography
 
 http://www2.informatik.uni-freiburg.de/~cziegler/BX/
@@ -421,4 +512,7 @@ https://www.isbn-international.org/content/what-isbn
 
 https://www.isbn.org/faqs_general_questions#isbn_faq5
 
+https://www.statista.com/topics/1177/book-market/
+
+http://www.ontariocreates.ca/collaboration/research_and_industry_information/industry_profiles/Book_Industry_Profile.htm#footnote-2
 
