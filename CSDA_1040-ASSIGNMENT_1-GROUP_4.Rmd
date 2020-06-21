@@ -1,57 +1,75 @@
 ---
 title: 'CSDA 1040: Assignment 1 - Group 4'
-author: "Jose German, Anjana Pradeep Kumar, Anupama Radhakrishnan Kowsalya, Xenel Nazar"
-date: "6/14/2020"
+author: "Jose German, Anjana Pradeep Kumar, Anupama Radhakrishnan Kowsalya, and Xenel Nazar"
+date: "6/20/2020"
 output: html_document
 ---
 # 1.0 Abstract
+Book readers encompass a large industry with ever changing tastes. Finding the next great book that users may like, would not only help the industry but also help satisfy avid readers. Data from the BookCrossing community helped provide the basis of a book recommendation system using the CRISP-DM methodology framework. A Shiny web application was developed providing a usable interface for readers to generate a list of recommended books based on their ratings of previous books they have read. 
 
 # 2.0 Introduction
-Books remain an important medium in today's society. In 2018, over 675 million print books were sold in the U.S. and book stores bring in almost 10 million dollars per year (https://www.statista.com/topics/1177/book-market/). While, in Canada, 54 million books accounting to 1.1 billion dollars in retail value, were sold in 2018 (http://www.ontariocreates.ca/collaboration/research_and_industry_information/industry_profiles/Book_Industry_Profile.htm#footnote-2). 
 
-Consumption of books remains relevant, as 74% of U.S. consumers have noted that they have consumed at least one book in the past year, and 98% of readers say pleasure is their main reason for reading books (https://www.statista.com/topics/1177/book-market/).
+Books remain an important medium in today's society. In 2018, over 675 million print books were sold in the U.S. and book stores bring in almost 10 million dollars per year (Watson, 2019). While, in Canada, 54 million books; accounting for 1.1 billion dollars in retail value, were sold in 2018 (Ontario Creates, 2020).
 
-
-
+Consumption of books remains relevant, as 74% of U.S. consumers have noted that they have consumed at least one book in the past year, and 98% of readers say pleasure is their main reason for reading books (Watson, 2019).
 
 # 3.0 Background
 
+While the industry remains a fixture in every person's life, the underlying trends the industry is facing is a major concern. From 2014 to 2019, the average industry growth in Canada was -3.6% (IBISWorld, 2019). This may point to various reasons, including but not limited to, a change in consumer tastes or even slow adoption of technology and new mediums by the industry.
+
+A solution the industry might look into, is to gain insight into readers' tastes and see what books they have liked and did not like. Recommending books that boost the "pleasure" consumers gain from reading a book and that aligns with their tastes may help keep consumers reading and help the industry overall.
+
 # 4.0 Objectives
-The objective is to find an effective recommender system to recommend the next book they should read, based on their inputs. 
+
+The objective is to find an effective recommender system to recommend the next book a user should read, based on ratings of past books they have read.
 
 # 5.0 Data Understanding
 
-## 5.1 About the Data
+### 5.1 About the Data
 
-The data is a crawl by Cai-Nicolas Ziegler  of the Department of Computer Science from the University of Freiburg on the BookCrossing community for a four week period in August to September 2004 (http://www2.informatik.uni-freiburg.de/~cziegler/BX/). 
+The data is from a crawl by Cai-Nicolas Ziegler  of the Department of Computer Science from the University of Freiburg on the BookCrossing community for a four week period in August to September 2004 (Ziegler, 2005).
 
-The BookCrossing community releases "books into the wild for a stranger to find, or via controlled release to another BookCrossing member" (https://www.bookcrossing.com/?). The data is a compilation of anonymized users with their locations, their explicit & implicit ratings, and information about the books they have read. 
+The BookCrossing community releases "books into the wild for a stranger to find, or via controlled release to another BookCrossing member" (BookCrossing, 2020). The data is a compilation of anonymized users with their locations, information about books they have read, as well as their explicit and implicit ratings of those books.  
 
-The data is compiled into three distinct csv files on User data ("BX-Users.csv"), Books ("BX-Books.csv"), and Ratings ("BX-Book-Ratings.csv")
+The data is compiled into three distinct csv files on User data ("BX-Users.csv"), Books ("BX-Books.csv"), and Ratings ("BX-Book-Ratings.csv").
 
-Each csv file contains various attributes such as:
+Each csv file contains various attributes, such as:
 
 Users:
+
 - User-Id: Represents each anonymized user
+
 - Location: The user's location
+
 - Age: The user's age
 
 Books:
-- ISBN: International Standard Book Number or unique identifier for each book. (https://www.isbn-international.org/content/what-isbn)
+
+- ISBN: International Standard Book Number or unique identifier for each book (International ISBN Agency, 2014)
+
 - Book-Title: Title of the book
+
 - Book-Author: The book's author
+
 - Year-of-Publication: Year when the book was published
+
 - Publisher: The book's publisher
+
 - Image-URL-S: Small cover image, linked to the Amazon website
+
 - Image-URL-M: Medium cover image, linked to the Amazon website
+
 - Image-URL-L: Large cover image, linked to the Amazon website
 
 Ratings:
+
 - User-Id: Represents each anonymized user
-- ISBN: International Standard Book Number or unique identifier for each book. (https://www.isbn-international.org/content/what-isbn)
+
+- ISBN: International Standard Book Number or unique identifier for each book (International ISBN Agency, 2014)
+
 - Book-Rating: Either explicit, expressed on a scale from 1-10 (higher values denoting higher appreciation), or implicit, expressed by 0.
 
-## 5.2	Import Packages
+### 5.2	Import Packages
 ```{r}
 knitr::opts_chunk$set(echo=TRUE)
 ```
@@ -79,12 +97,12 @@ library(recommenderlab)
 ```
 
 
-## 5.3	Import Data
+### 5.3	Import Data
 ```{r}
 # Import CSV Files
 
 # Import Books CSV
-books <- read.csv("BX-Books.csv", header = TRUE, sep = ";", quote="", stringsAsFactors = FALSE, col.names = c("ISBN", "Book_Title", "Book_Author", "Year_of_Publication", "Publisher", "Image_S", "Image_M", "Image_L"))
+books=read.csv("BX-Books.csv", header = TRUE, sep = ";", quote="", stringsAsFactors = FALSE, col.names = c("ISBN", "Book_Title", "Book_Author", "Year_of_Publication", "Publisher", "Image_S", "Image_M", "Image_L"))
 
 # Import Users CSV
 users=read.csv("BX-Users.csv", header = TRUE, sep = ";", quote="", stringsAsFactors = FALSE, col.names = c("UserId","Location","Age"))
@@ -95,145 +113,105 @@ ratings=read.csv("BX-Book-Ratings.csv", header = TRUE, sep=";", quote="", string
 
 # 6.0	Data Exploration and Preparation
 
-## 6.1 Initial Data cleanup
+### 6.1 Initial Data cleanup
 
 We first need to remove quotes from the data.
 ```{r}
-# Function to remove quotes from dataframes
+# Function to remove quotes from the DataFrames
 clean <- colwise(function(ttt) str_replace_all(ttt, '\"', ""))
 ```
 
 ```{r}
-# Apply clean function
+# Apply clean function to remove quotes from each DataFrame
 books[] <- clean(books)
 ratings[] <- clean(ratings)
 users[] <- clean(users)
 ```
 
-We also neeed to ensure certain columns as numeric. 
+We also need to ensure certain columns are numeric. 
 ```{r}
-# Convert Certain Columns as Numeric
+# Convert Certain Columns to Numeric
 
-# Convert UserID and Age in Users Dataframe
+# Convert UserID and Age in Users DataFrame
 users$UserId<-as.numeric(users$UserId)
 users$Age<-as.numeric(users$Age)
 
-# Convert Year of Publication in Books Dataframe
+# Convert Year of Publication in Books DataFrame
 books$Year_of_Publication<-as.numeric(books$Year_of_Publication)
 
-# Convert UserId and Rating in Ratings Dataframe
+# Convert UserId and Rating in Ratings DataFrame
 ratings$UserId<-as.numeric(ratings$UserId)
 ratings$Rating<-as.numeric(ratings$Rating)
 ```
 
-Note: We are not converting the ISBN columns as numeric as they may contain the Roman Numeral "X" instead of the number 10 (https://www.isbn.org/faqs_general_questions#isbn_faq5).
+Note: We are not converting the ISBN columns as numeric, as they may contain the Roman Numeral "X" instead of the number 10 (R.R. Bowker LLC., 2014).
 
 
-We are also removing image links from the books dataframe as it will not be pertinent for later analysis. This may be included later during deployment or future iterations of the recommender system.
+We are also removing image links from the books DataFrame, as it will not be pertinent for later analysis. This may be included later during deployment or future iterations of the recommender system.
 ```{r}
-# Remove Columns "Image_S", "Image_M", "Image_L" from books dataframe
+# Remove Columns "Image_S", "Image_M", "Image_L" from Books DataFrame
 books<-books[-c(6,7,8)]
 ```
 
-## 6.2 Verify Data Types
-
+### 6.2 Verify Data Types
 ```{r}
-# Data Types under books Dataframe
+# Data Types under Books DataFrame
 str (books)
 ```
 
 ```{r}
-# Data Types for users Dataframe
+# Data Types for Users DataFrame
 str (users)
 ```
 
 ```{r}
-# Data Types for ratings Dataframe
+# Data Types for Ratings DataFrame
 str(ratings)
 ```
 
-## 6.3 Check for Missing Values
-
+### 6.3 Summary of the Variables
 ```{r}
-# Check books Dataframe
-sum (is.na(books))
-```
-
-```{r}
-# Check users Dataframe
-sum(is.na(users))
-```
-
-```{r}
-# Check ratings Dataframe
-sum(is.na(ratings))
-```
-
-## 6.4 Check for Duplicates
-```{r}
-# Check Duplicates under books Dataframe
-anyDuplicated(books)
-```
-Results:
-
-```{r}
-# Check Duplicates under users Dataframe
-anyDuplicated(users)
-```
-Results:
-
-```{r}
-# Check Duplicates under ratings Dataframe
-anyDuplicated(ratings)
-```
-Results: There are no duplicates under ratings
-
-## 6.5 Summary of the Variables
-```{r}
-# Details of books Dataframe
+# Details of Books DataFrame
 summary (books)
 ```
 
 ```{r}
-# Details of users Dataframe
+# Details of Users DataFrame
 summary (users)
 ```
 
 ```{r}
-# Details of ratings Dataframe
+# Details of Ratings DataFrame
 summary (ratings)
 ```
 
-## 6.6 Simple Statistics
+### 6.4 Replace NULL Values with NA
 ```{r}
-##
-```
-
-## 6.7 Replace NULL Values with NA
-```{r}
-# Replace NULL values with NA
+# Replace NULL values with NA in all DataFrames
 users_df <-users %>% replace(.=="NULL", NA)
 books_df <-books %>% replace(.=="NULL", NA)
 ratings_df<-ratings %>% replace(.=="NULL", NA)
 ```
 
-## 6.8 Remove rows with NA
+### 6.5 Remove rows with NA
 ```{r}
-# Remove rows with NA
+# Remove rows with NA in all DataFrames
 users_df<-users_df %>% drop_na(UserId)
 users_df<-users_df %>% drop_na(Location)
 books_df<-na.omit(books_df)
 ```
 
-## 6.9 Filter out rows with webaddresses under ISBN
+### 6.6 Filter out rows with web addresses under ISBN
 
-There was likely an error during the initial compilation of the web crawl, resulting in some links showing under ISBN instances. These web addresses need to be removed from our data to help our analysis. 
+There was likely an error during the initial compilation of the web crawl, resulting in some links showing under ISBN instances. These web addresses need to be removed from our data to improve our analysis. 
 ```{r}
 # Filter out rows containing web addresses under ISBN (e.g. "http")
 books_df<-books_df[!grepl("http", books_df$ISBN),]
 ```
 
-## 6.10 Further cleanup
+### 6.7 Further cleanup
+
+We will focus on readers between the ages of 11 and 99, and we will need need to replace NA values with the mean age of 34.
 ```{r}
 # Replace ages less than 10 and greater than 100
 users_df$Age[users_df$Age > 100] <- NA
@@ -246,61 +224,93 @@ ageMean = trunc(mean(users_df$Age, na.rm = TRUE))
 users_df$Age[is.na(users_df$Age)] <- ageMean
 ```
 
+We will also need to replace Years of Publication values that show as NAs or zeroes with the mean year of publication, which is 1959.
 ```{r}
-# Replace year =0 and NA  with mean
+# Replace Years of Publication showing as 0 or NA, with the mean value
 yearMean = trunc(mean(books_df$Year_of_Publication, na.rm = TRUE))
 books_df$Year_of_Publication[books_df$Year_of_Publication ==0] <- NA
 books_df$Year_of_Publication[is.na(books_df$Year_of_Publication)] <- yearMean
 ```
 
-## 6.11 Merge dataframes
 ```{r}
-# Merge ratings and books dataframes to "ratings_books" dataframe
+# Save into a RDS file
+ saveRDS(books_df, file="booksDf.RDS")
+```
+
+
+### 6.8 Merge DataFrames
+
+We will now have to combine the DataFrames into a single DataFrame for proper analysis. 
+```{r}
+# Merge Ratings and Books DataFrames to "ratings_books" DataFrame
 ratings_books<-left_join(ratings_df,books_df,by="ISBN")
 ```
 
 ```{r}
-# Merge ratings_books and users dataframes to "ratings_books_users" dataframe"
+# Merge ratings_books and Users DataFrames to "ratings_books_users" DataFrame
 ratings_books_users<-left_join(ratings_books,users_df,by="UserId")
 ```
 
-## 6.12 remove NAs from dataframe
+### 6.9 Remove NAs from DataFrame
 ```{r}
-# Remove NAs from dataframe
+# Remove NAs from DataFrame
 ratings_books_users<-na.omit(ratings_books_users)
 ```
 
-## 6.13 Subset dataframe to Explicit and Implicit ratings
+### 6.10 Generate Book List
 ```{r}
-# Subset dataframe to Explicit and Implicit Ratings
+#Generate Book List for Word Cloud for Shiny application
+cloud<-ratings_books_users%>%
+    group_by(Book_Title)%>%
+    dplyr::summarize(count_Book_Title=n())%>%
+    filter(count_Book_Title>500)%>%
+    select(Book_Title,count_Book_Title)%>%
+    head()
+```
+
+```{r}
+# Save books list into a RDS file
+saveRDS(cloud, file = "wordCloud.Rds")
+```
+
+
+### 6.11 Subset DataFrame to Explicit and Implicit Ratings
+
+The ratings are actually categorized into two groups, explicit and implicit ratings. Explicit ratings are listed from 1-10, with higher values reflecting the consumers' appreciation of the book, while implicit ratings are listed as 0s (Ziegler, 2005). We will need to subset the data to only look at the explicit ratings. 
+```{r}
+# Subset DataFrame to Explicit and Implicit Ratings
 ratings_explicit<-subset(ratings_books_users,ratings_books_users$Rating>0)
 ratings_implicit<-subset(ratings_books_users,ratings_books_users$Rating==0)
 ```
 
+
+### 6.12 Simple Analysis
+
+We can now gain some insight in the data and determine some of the most popular books and top rated books overall. This can be used to get a sense of what the overall reader base of "BookCrossing" tend to prefer. 
+
+We can identify the most popular books.
 ```{r}
 # Popular books
-most_read_books<-ratings_books_users%>%
+most_popular_books<-ratings_books_users%>%
   group_by(ISBN,Book_Title,Book_Author,Publisher)%>%
   summarize(num_ISBN=n())%>%
   filter(num_ISBN>200)%>%
   arrange(-num_ISBN)%>%
-  select(ISBN,Book_Title,Book_Author,Publisher)%>%
+  select(ISBN,Book_Title,Book_Author,Publisher,num_ISBN)%>%
   head(10)
 
-# Save to list
-poplist<-most_read_books%>%
-  select(ISBN,Book_Title,Book_Author,Publisher)
+print(most_popular_books)
 ```
 
 ```{r}
-# Plot Popular books
-bp<- ggplot(most_read_books, aes(x="most_read_books", y="ISBN", fill=Book_Title))+
+# Plot Popular Books
+bp<- ggplot(most_popular_books, aes(x="Popular Books", y=num_ISBN, fill=Book_Title))+
   geom_bar(width = 1, stat = "identity")
 
-bp + scale_fill_brewer(palette="Dark2")+theme_minimal()
+bp + scale_fill_brewer(palette="Paired")+theme_minimal()
 ```
 
-
+We can identify the top rated books as well.
 ```{r}
 # Top Rated books
 top_rated_books<-ratings_explicit%>%
@@ -309,98 +319,102 @@ top_rated_books<-ratings_explicit%>%
   summarize(num_ISBN=n())%>%
   filter(num_ISBN>50)%>%
   arrange(-num_ISBN)%>%
-  select(ISBN,Book_Title,Book_Author,Publisher)%>%
+  select(ISBN,Book_Title,Book_Author,Publisher,num_ISBN)%>%
   head(10)
 
-# Save to list
-topratelist<-top_rated_books%>%
-  select(ISBN,Book_Title,Book_Author,Publisher)
+print(top_rated_books)
 ```
+
 ```{r}
-pie<- ggplot(top_rated_books, aes(x="topratelist", y="num_ISBN", fill=Book_Title))+
+# Plot Top Rated books
+pie<- ggplot(top_rated_books, aes(x="Top Rated Books", y=num_ISBN, fill=Book_Title))+
   geom_bar(width = 1, stat = "identity")
 
 pie + coord_polar("y", start=0)
 ```
 
-
+### 6.13 Generate Lists
 ```{r}
-# Subset data to users who have rated 50 or more books
-rating_matrix_long<-ratings_explicit%>%
-  add_count(UserId)%>%
-  dplyr::filter(n>50)%>%
-  select(ISBN,UserId,Rating)%>%
-  arrange(UserId)
-```
-
-
-```{r}
-# Narrow down to only books that were rated 50 or more 
-rating_matrix_long<-rating_matrix_long%>%
-  add_count(ISBN)%>%
-  dplyr::filter(n>50)%>%
-  select(ISBN,UserId,Rating)%>%
-  arrange(ISBN)
+# Save most read books in a list
+poplist<-most_popular_books%>%
+  select(ISBN,Book_Title,Book_Author,Publisher)
 ```
 
 ```{r}
-# Save to list
-booklist<-rating_matrix_long%>%
-  left_join(books_df,by="ISBN")%>%
-  select(Book_Title)%>%
-  unique()
+# Save top rated books in a list
+topratelist<-top_rated_books%>%
+  select(ISBN,Book_Title,Book_Author,Publisher)
 ```
 
-
+### 6.14 Save lists as RDS files for Shiny Deployment
 ```{r}
-# User-Book Rating matrix
-rating_matrix<-rating_matrix_long%>%pivot_wider(names_from = ISBN,values_from=Rating,values_fill=0)
+# Save list of most popular books into a RDS file
+saveRDS(poplist, file = "poplist.Rds")
+
+# Save list of top rated books into a RDS file
+saveRDS(topratelist, file="topratedlist.Rds")
 ```
 
+### 6.15 Evaluate Rating Distribution
 ```{r}
-# Check Age Distribution
-
-table(users_df$Age)
-barplot(table(users_df$Age),main="Age Distribution")
-```
-
-```{r}
-# Replot and check
-table(users_df$Age)
-barplot(table(users_df$Age),main="Age Distribution")
-
-```
-
-```{r}
-# Rating Distribution, Summary, Statistics and Normalization
-
-summary(ratings_explicit)
+# Ratings Details
+summary(ratings_explicit$Rating)
 range(ratings_explicit$Rating)
-
-rating_dist = ratings_explicit$Rating
-plotNormalHistogram(rating_dist)
-
 print(skewness(ratings_explicit$Rating))# Left skewed by -0.6613279
 ```
 
 ```{r}
-# Identify Outliers
-outlier(ratings_explicit$Rating)
-ratings_norm<-subset(ratings_explicit,ratings_explicit$Rating>3)
-
-print(skewness(ratings_norm$Rating)) # skewness after  -0.3522745
+# Rating Distribution
+hist(ratings_explicit$Rating, 
+     breaks = 'Sturges',
+     xlab = 'Rating',
+     main = '',
+     col = 3)
 ```
 
 ```{r}
-# Normalising using log transformation
-rating_log_norm = ratings_norm$Rating
-ratings_norm$Rating<-log(ratings_norm$Rating)
+# Rating Distribution
+rating_dist = ratings_explicit$Rating
+plotNormalHistogram(rating_dist)
+```
+
+The ratings are distributed from the range 1-10, and the ratings are left skewed by -0.6613279.
+
+### 6.16 Subset Ratings
+Based on the ratings distribution, we can lessen how skewed the data is. We can subset the data by focusing on ratings greater than 3. 
+```{r}
+outlier(ratings_explicit$Rating)
+```
+```{r}
+# Subset data to only ratings greater than 3
+ratings_norm<-subset(ratings_explicit,ratings_explicit$Rating>3)
+print(skewness(ratings_norm$Rating)) # skewness after -0.3522745
+```
+
+```{r}
+# Visualize Rating Distribution
+rating_subset_dist = ratings_norm$Rating
+plotNormalHistogram(rating_subset_dist)
+```
+
+Subsetting the data has lessened the skewness of the data and is now left skewed to -0.3522745 compared to -0.6613279 before.
+
+We can also visualize the effect if the ratings data is normalized.
+```{r}
+# Normalize ratings data and plot
+rating_log_norm = log(ratings_norm$Rating)
 plotNormalHistogram(rating_log_norm)
 ```
 
-```{r}
-# matrix with users rated more than 50 
+# 7.0 Modeling
 
+### 7.1 Subset DataFrame
+
+For purposes of modeling, the data needs to be non-normalized.
+
+We need narrow down the DataFrame, we will first subset the DataFrame to users who have rated 50 or more books.
+```{r}
+# Subset data to users who have rated 50 or more books
 rating_matrix_long<-ratings_norm%>%
   add_count(UserId)%>%
   dplyr::filter(n>50)%>%
@@ -408,9 +422,9 @@ rating_matrix_long<-ratings_norm%>%
   arrange(UserId)
 ```
 
+We then further narrow the data down to books that have been rated 50 or more times.
 ```{r}
-# matrix with books rated more than 50 
-
+# Narrow down to only books that were rated 50 or more times
 rating_matrix_long<-rating_matrix_long%>%
   add_count(ISBN)%>%
   dplyr::filter(n>50)%>%
@@ -418,42 +432,129 @@ rating_matrix_long<-rating_matrix_long%>%
   arrange(ISBN)
 ```
 
+Plot Rating Distribution and User count for the subset
 ```{r}
-booklist<-rating_matrix_long%>%
-  left_join(books_df,by="ISBN")%>%
-  select(Book_Title)%>%
-  unique()
+#Rating Distribution and user count for the subset
+ggplot(rating_matrix_long, aes(Rating)) + geom_histogram(binwidth = 0.25)
 ```
 
+### 7.2 Extract Book List
+
+We also need to extract the book list to use for the Shiny web application.
+```{r}
+rating_matrix_long2<-ratings_norm%>%
+  add_count(UserId)%>%
+  dplyr::filter(n>50)%>%
+  select(ISBN,UserId,Rating,Book_Title)%>%
+  arrange(UserId)
+
+rating_matrix_long2<-rating_matrix_long2%>%
+  add_count(ISBN)%>%
+  dplyr::filter(n>50)%>%
+  select(ISBN,UserId,Rating,Book_Title)%>%
+  arrange(UserId)
+
+# Extract book list
+ booklist<-rating_matrix_long2%>%
+   select(ISBN,Book_Title)%>%
+   arrange(Book_Title)%>%
+   unique()
+
+```
+
+```{r}
+# Save list of books into a RDS file
+ saveRDS(booklist, file="bookList.RDS")
+```
+This list will be what the user sees in making their selection 
+
+
+### 7.3 Pivot Matrix
 ```{r}
 # User-Book Rating matrix
 rating_matrix<-rating_matrix_long%>%pivot_wider(names_from = ISBN,values_from=Rating)
 ```
 
+
+### 7.4 Remove Columns
 ```{r}
-# Removing userid from rating matrix
-rating_matrix = as.matrix(rating_matrix[,-1])
+# Removing UserId and Book_Title from Rating Matrix
+rating_matrix_final = as.matrix(rating_matrix[,-1])
 ```
 
+```{r}
+# Save into a RDS file
+ saveRDS(rating_matrix_final, file="ratingMatrix.RDS")
+```
+
+
+### 7.5 Convert into a Real Matrix
 ```{r}
 # Real matrix
 object.size(rating_matrix)
-rating_matrix = as(rating_matrix, "realRatingMatrix")
+
+# Convert Rating Matrix into a recommenderlab Sparse Matrix
+rating_matrix = as(rating_matrix_final, "realRatingMatrix")
 object.size(rating_matrix)
 ```
 
+### 7.6 Check Similarities
+
 ```{r}
-#Normalize the ratings matrix
-#rating_matrix = normalize(rating_matrix)
+# Similarity Between Users
+similarity_users <- similarity(rating_matrix[1:10, ], 
+                               method = "jaccard", 
+                               which = "UserId")
+as.matrix(similarity_users)
+image(as.matrix(similarity_users), main = "User similarity")
 ```
 
 ```{r}
-ratingmodel = Recommender(rating_matrix, method = "UBCF", param=list(method="Cosine",nn=10)) 
+# Similarity between Books
+
+similarity_books <- similarity(rating_matrix[, 1:10], method =
+                                 "cosine", which = "items")
+as.matrix(similarity_books)
+image(as.matrix(similarity_books), main = "Book similarity")
 ```
 
+```{r}
+#Heat Map of first 10 rows and 15 columns
+image(rating_matrix[1:10, 1:15], main = "Heatmap of the first rows and columns")
+```
+
+### 7.7 Generate Recommender Model
+```{r}
+# Recommender Model
+ratingmodel = Recommender(rating_matrix, method = "UBCF", param=list(method="Cosine",nn=10))
+```
+
+```{r}
+# Save into a RDS file
+ saveRDS(ratingmodel, file="ratingModel.RDS")
+```
+
+### 7.8 Evaluation
+```{r}
+# Evaluation Scheme
+evaluation_scheme <- evaluationScheme(rating_matrix,
+                                        method="cross-validation",
+                                        k=5, given=1,
+                                        goodRating=3) #k=5 meaning a 5-fold cross validation. given=3 meaning a Given-3 protocol
+
+# Evaluation Results
+  evaluation_results <- evaluate(evaluation_scheme,
+                                 method="UBCF",
+                                 n=c(1,3,5,10,15,20))
+  eval_results <- getConfusionMatrix(evaluation_results)[[1]]
+  print(eval_results)
+```
+
+### 7.9 Check Predictions
 ```{r}
 # Predictions
-Top_5_pred = predict(ratingmodel, rating_matrix[1], n=5)
+# Obtain top 5 recommendations for 2nd user in dataset
+Top_5_pred = predict(ratingmodel, rating_matrix[2], n=5)
 Top_5_List = as(Top_5_pred, "list")
 ```
 
@@ -467,52 +568,36 @@ bookrecomdf<-left_join(recomdf,books_df,by="ISBN")%>%
 ```
 
 
-```{r}
-books_df_year<-books_df%>%
-  group_by(Year_of_Publication)%>%
-  summarise(counts = n())
-
-ggplot(books_df_year, aes(x=Year_of_Publication, y=counts)) +geom_point()
-```
-
-
-```{r}
-# Split the Location column in ratings_book_user into City, Prov, Country
-# Creates new dataframe: ratings_book_user_loc
-
-ratings_books_users_loc <- separate(data = ratings_books_users, col = Location, into = c("City", "Prov", "Country"), sep = "\\,")
-```
-
-```{r}
-# Split the Location column in ratings_book_user into City, Prov, Country
-# Creates new dataframe: ratings_book_user_loc
-
-ratings_explicit_loc <- separate(data = ratings_explicit, col = Location, into = c("City", "Prov", "Country"), sep = "\\,")
-```
-
-# 7.0 Modeling
-
 # 8.0 Conclusions and Recommendations
+The current model is constrained with the limited size of the initial data crawl. Expanding the time period to a year or more would capture even more ratings of books from more users. 
 
-## 8.1 Conclusions
+The increased time period could help us segment the data by season, and provide some insight if certain books are more popular in a season; helping improve book recommendations based on the time period the user inputs their ratings. This would also help book publishers prepare for certain seasons by increasing or decreasing marketing expenses when a new season starts (e.g. Holiday Season). 
 
-## 8.2 Recomendations
+Information from other mediums, such as Audiobooks and eBooks, would also provide more information on users' appreciation of books. As well as provide a sense if purchases of a certain medium is increasing / declining, helping book publishers allocate funds accordingly. 
 
-Additional info could additionally benefit the recomender system, to help narrow down books the users may like data on the books' genre, language, number of pages, etc.
+Collection of other data such as genre, language, book size, or number of pages would benefit the model and help users narrow down what readers may be looking for. 
+
+Partnering with certain book stores, publishers, and online retailers would provide additional data, including links to purchase, pictures of the books, and other metadata.
+
+Overall data collection would also need to be reevaluated after a set number of years, as consumer tastes change. 
 
 # 9.0 Deployment
+The underlying code of this markdown report, can be found on [Github](https://github.com/xnazar/CSDA1040Assignment1) and on the Shiny web application About page as listed on [shinyapps.io](https://jose-g.shinyapps.io/BookRecommender/)
 
-The underlying code of this markdown report and the shiny app, can be found on [Github](https://github.com/xnazar/CSDA1040Assignment1)
+The Shiny web application provides a working user interface for readers to provide their ratings on three different books, and will then generate a list of reccomendations based on their ratings. It also lists the current most popular books, and the top rated books. 
 
 # 10.0 Bibliography
 
-http://www2.informatik.uni-freiburg.de/~cziegler/BX/
+BookCrossing. (2020). About BookCrossing. Retrieved June 10, 2020, from https://www.bookcrossing.com/about
 
-https://www.isbn-international.org/content/what-isbn
+IBISWorld. (2019). Industry Market Research, Reports, and Statistics. Retrieved June 15, 2020, from https://www.ibisworld.com/canada/market-research-reports/book-publishing-industry/
 
-https://www.isbn.org/faqs_general_questions#isbn_faq5
+International ISBN Agency. (2014). International ISBN Agency. Retrieved June 15, 2020, from https://www.isbn-international.org/content/what-isbn
 
-https://www.statista.com/topics/1177/book-market/
+Ontario Creates. (2020, May). MAY 2020 PROFILE. Retrieved June 15, 2020, from http://www.ontariocreates.ca/collaboration/research_and_industry_information/industry_profiles/Book_Industry_Profile.htm#footnote-2
 
-http://www.ontariocreates.ca/collaboration/research_and_industry_information/industry_profiles/Book_Industry_Profile.htm#footnote-2
+R.R. Bowker LLC. (2014). FAQs: General Questions. Retrieved June 15, 2020, from https://www.isbn.org/faqs_general_questions#isbn_faq5
 
+Watson, A. (2019, January 16). Topic: Book Industry. Retrieved June 15, 2020, from https://www.statista.com/topics/1177/book-market/
+
+Ziegler, C. (2005, May 14).  Book-Crossing Dataset ... mined by Cai-Nicolas Ziegler, DBIS Freiburg. Retrieved June 10, 2020, from http://www2.informatik.uni-freiburg.de/~cziegler/BX/
